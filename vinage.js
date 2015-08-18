@@ -99,6 +99,9 @@ GeometricObject.prototype.pointObb = function(point, rect) {
 
 	return rotPoint.x < rect.center.x + rect.width/2 && rotPoint.x > rect.center.x - rect.width/2 && rotPoint.y < rect.center.y + rect.height/2 && rotPoint.y > rect.center.y - rect.height/2;
 }
+GeometricObject.prototype.pointPoint = function(pointOne, pointTwo) {//this function isn't really usefull as this is a really simple check
+	return pointOne.x === pointTwo.x && pointOne.y === pointTwo.y;//but it's there for consistency
+}
 
 
 function Point(x, y) {
@@ -112,6 +115,8 @@ Point.prototype.collision = function(geomObj) {
 		return this.pointCircle(this, geomObj);
 	} else if(geomObj instanceof Rectangle) {
 		return this.pointObb(this, geomObj);
+	} else if(geomObj instanceof Point) {
+		return this.pointPoint(this, point);
 	} else {
 		throw new TypeError("Not a valid geometric object");
 	}
