@@ -80,7 +80,7 @@ GeometricObject.prototype.obbObb = function(rectOne, rectTwo) {
 	});
 }
 GeometricObject.prototype.circleCircle = function(circleOne, circleTwo) {
-	return Math.sqrt(Math.pow(circleOne.center.x - circleTwo.center.x, 2) + Math.pow(circleOne.center.y - circleTwo.center.y, 2)) < circleOne.radius + circleTwo.radius;
+	return Math.pow(circleOne.center.x - circleTwo.center.x, 2) + Math.pow(circleOne.center.y - circleTwo.center.y, 2) < Math.pow(circleOne.radius + circleTwo.radius, 2);
 }
 GeometricObject.prototype.aabbAabb = function(rectOne, rectTwo) {
 	if(rectOne.center.x - rectTwo.width/2 >= rectOne.center.x + rectOne.width/2
@@ -91,12 +91,30 @@ GeometricObject.prototype.aabbAabb = function(rectOne, rectTwo) {
 	else
 		return true;
 }
+GeometricObject.prototype.pointCircle = function(point, circle) {
+	return Math.pow(circle.center.x - point.x, 2) + Math.pow(circle.center.y - point.y, 2) < Math.pow(circle.radius, 2);
+}
+GeometricObject.prototype.pointObb = function(point, rect) {
+	var rotPoint = new Point(Math.cos(-rect.angle)*(point.x - rect.center.x) - Math.sin(-rect.angle)*(point.y - rect.center.y) + rect.center.x, Math.sin(-rect.angle)*(point.x - rect.center.x) + Math.cos(-rect.angle)*(point.y - rect.center.y) + rect.center.y);
+
+	return rotPoint.x < rect.center.x + rect.width/2 && rotPoint.x > rect.center.x - rect.width/2 && rotPoint.y < rect.center.y + rect.height/2 && rotPoint.y > rect.center.y - rect.height/2;
+}
 
 
 function Point(x, y) {
 	this.x = x;
 	this.y = y;
 	return GeometricObject.call(this);
+}
+Point.prototype = Object.create(GeometricObject.prototype);
+Point.prototype.collision = function(geomObj) {
+	if(geomObj instanceof Circle) {
+		return this.pointCircle(this, geomObj);
+	} else if(geomObj instanceof Rectangle) {
+		return this.pointObb(this, geomObj);
+	} else {
+		throw new TypeError("Not a valid geometric object");
+	}
 }
 
 function Vector(argOne, argTwo) {
@@ -208,6 +226,8 @@ Rectangle.prototype.collision = function(geomObj) {
 		}
 	} else if(geomObj instanceof Circle) {
 		return this.circleObb(geomObj, this);
+	} else if(geomObj instanceof Point) {
+		return this.pointObb(geomObj, this);
 	} else {
 		throw new TypeError("Not a valid geometric object");
 	}
@@ -228,17 +248,17 @@ function Circle(centerPoint, radius) {
 	this.radius = radius;
 }
 Circle.prototype = Object.create(GeometricObject.prototype);
-Object.defineProperty(Circle.prototype, "collision", {
-	value: function(geomObj) {
-		if(geomObj instanceof Rectangle) {
-			return this.circleObb(this, geomObj);
-		} else if (geomObj instanceof Circle){
-			return this.circleCircle(this, geomObj);
-		} else {
-			throw new TypeError("Not a valid geometric object");
-		}
+Circle.prototype.collision = function(geomObj) {
+	if(geomObj instanceof Rectangle) {
+		return this.circleObb(this, geomObj);
+	} else if(geomObj instanceof Circle) {
+		return this.circleCircle(this, geomObj);
+	} else if(geomObj instanceof Point) {
+		return this.pointCircle(geomObj, this);
+	} else {
+		throw new TypeError("Not a valid geometric object");
 	}
-});
+}
 
 if(typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = {
 	Point: Point,
