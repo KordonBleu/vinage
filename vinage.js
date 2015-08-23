@@ -33,29 +33,28 @@ GeometricObject.proxyHandler = {
 		return false;
 	}
 }
-GeometricObject.prototype.circleObb = function(circle, rect) {
-	var rot = rect.angle > 0 ? -rect.angle : -rect.angle + Math.PI,
-		deltaX = circle.center.x - rect.center.x,
-		deltaY = circle.center.y - rect.center.y,
-		tCircleX = Math.cos(rot) * deltaX - Math.sin(rot) * deltaY + rect.center.x,//rotate the circle around the center of the OOB
-		tCircleY = Math.sin(rot) * deltaX + Math.cos(rot) * deltaY + rect.center.y;//so that the OBB can be treated as an AABB
-	deltaX = Math.abs(tCircleX - rect.center.x);
-	deltaY = Math.abs(tCircleY - rect.center.y);
+GeometricObject.prototype.circleObb = function(circleX, circleY, circleRadius, rectX, rectY, rectWidth, rectHeight, rectAngle) {//haha, rectAngle
+	var rot = rectAngle > 0 ? -rectAngle : -rectAngle + Math.PI,
+		deltaX = circleX - rectX,
+		deltaY = circleY - rectY,
+		tCircleX = Math.cos(rot) * deltaX - Math.sin(rot) * deltaY + rectX,//rotate the circle around the center of the OOB
+		tCircleY = Math.sin(rot) * deltaX + Math.cos(rot) * deltaY + rectY;//so that the OBB can be treated as an AABB
+	deltaX = Math.abs(tCircleX - rectX);
+	deltaY = Math.abs(tCircleY - rectY);
 
-	if(deltaX > rect.width / 2 + circle.radius || deltaY > rect.height / 2 + circle.radius) return false;
+	if(deltaX > rectWidth / 2 + circleRadius || deltaY > rectHeight / 2 + circleRadius) return false;
 
-	if(deltaX <= rect.width / 2 || deltaY <= rect.height / 2) return true;
+	if(deltaX <= rectWidth / 2 || deltaY <= rectHeight / 2) return true;
 
-	return Math.pow(deltaX - rect.height/2, 2) + Math.pow(deltaY - rect.width/2, 2) <= Math.pow(circle.radius, 2);
+	return Math.pow(deltaX - rectHeight/2, 2) + Math.pow(deltaY - rectWidth/2, 2) <= Math.pow(circleRadius, 2);
 }
-GeometricObject.prototype.obbObb = function(rectOne, rectTwo) {
+GeometricObject.prototype.obbObb = function(rectOneX, rectOneY, rectOneWidth, rectOneHeigth, rectOneAngle, rectTwoX, rectTwoY, rectTwoWidth, rectTwoHeigth, rectTwoAngle) {
 	//rotate the first OOB to transform it in AABB to simplify calculations
-	var rectTwoRot = rectTwo.angle - rectOne.angle,
+	/*var rectTwoRot = rectTwo.angle - rectOne.angle,
 		rectOne = new Rectangle(rectOne.center, rectOne.width, rectOne.height),
-		rectTwo = new Rectangle(rectTwo.center, rectTwo.width, rectTwo.height, rectTwoRot);
-
-	rectOne.center._parents.pop();//rectOne and RectTwo should be garbage collected at the end of the scope
-	rectTwo.center._parents.pop();//so references to them must be made unreachable
+		rectTwo = new Rectangle(rectTwo.center, rectTwo.width, rectTwo.height, rectTwoRot);*/
+	var rectOne = new Rectangle(new Point(rectOneX, rectOneY), rectOneWidth, rectOneHeigth, 0),
+		rectTwo = new Rectangle(new Point(rectTwoX, rectTwoY), rectTwoWidth, rectTwoHeigth, rectTwoAngle - rectOneAngle);
 
 	//we can't check against the diagonal because it is too CPU intensive
 	var sideSum = rectTwo.width + rectTwo.height;//so we check against the sum of the sides which is > than the diagonal (not to much hopefully)
@@ -79,28 +78,28 @@ GeometricObject.prototype.obbObb = function(rectOne, rectTwo) {
 		return projOne.max < projTwo.min || projTwo.max < projOne.min;//overlapp or not
 	});
 }
-GeometricObject.prototype.circleCircle = function(circleOne, circleTwo) {
-	return Math.pow(circleOne.center.x - circleTwo.center.x, 2) + Math.pow(circleOne.center.y - circleTwo.center.y, 2) < Math.pow(circleOne.radius + circleTwo.radius, 2);
+GeometricObject.prototype.circleCircle = function(circleOneX, circleOneY, circleOneRadius, circleTwoX, circleTwoY, circleTwoRadius) {
+	return Math.pow(circleOneX - circleTwoX, 2) + Math.pow(circleOneY - circleTwoY, 2) < Math.pow(circleOneRadius + circleTwoRadius, 2);
 }
-GeometricObject.prototype.aabbAabb = function(rectOne, rectTwo) {
-	if(rectOne.center.x - rectTwo.width/2 >= rectOne.center.x + rectOne.width/2
-	|| rectTwo.center.x + rectTwo.width/2 <= rectOne.center.x - rectOne.width/2
-	|| rectTwo.y - rectTwo.height/2 >= rectOne.center.y + rectOne.height/2
-	|| rectTwo.y + rectTwo.height/2 <= rectOne.center.y - rectOne.height/2)
+GeometricObject.prototype.aabbAabb = function(rectOneX, rectOneY, rectOneWidth, rectOneHeight, rectTwoX, rectTwoY, rectTwoWidth, rectTwoHeight) {
+	if(rectOneX - rectTwoWidth/2 >= rectOneX + rectOneWidth/2
+	|| rectTwoX + rectTwoWidth/2 <= rectOneX - rectOneWidth/2
+	|| rectTwoY - rectTwoHeight/2 >= rectOneY + rectOneHeight/2
+	|| rectTwoY + rectTwoHeight/2 <= rectOneY - rectOneHeight/2)
 		return false;
 	else
 		return true;
 }
-GeometricObject.prototype.pointCircle = function(point, circle) {
-	return Math.pow(circle.center.x - point.x, 2) + Math.pow(circle.center.y - point.y, 2) < Math.pow(circle.radius, 2);
+GeometricObject.prototype.pointCircle = function(pointX, pointY, circleX, circleY, radius) {
+	return Math.pow(circleX - pointX, 2) + Math.pow(circleY - pointY, 2) < Math.pow(radius, 2);
 }
-GeometricObject.prototype.pointObb = function(point, rect) {
-	var rotPoint = new Point(Math.cos(-rect.angle)*(point.x - rect.center.x) - Math.sin(-rect.angle)*(point.y - rect.center.y) + rect.center.x, Math.sin(-rect.angle)*(point.x - rect.center.x) + Math.cos(-rect.angle)*(point.y - rect.center.y) + rect.center.y);
+GeometricObject.prototype.pointObb = function(pointX, pointY, rectX, rectY, rectWidth, rectHeight, rectAngle) {
+	var rotPoint = new Point(Math.cos(-rectAngle)*(pointX - rectX) - Math.sin(-rectAngle)*(pointY - rectY) + rectX, Math.sin(-rectAngle)*(pointX - rectX) + Math.cos(-rectAngle)*(pointY - rectY) + rectY);
 
-	return rotPoint.x < rect.center.x + rect.width/2 && rotPoint.x > rect.center.x - rect.width/2 && rotPoint.y < rect.center.y + rect.height/2 && rotPoint.y > rect.center.y - rect.height/2;
+	return rotPoint.x < rectX + rectWidth/2 && rotPoint.x > rectX - rectWidth/2 && rotPoint.y < rectY + rectHeight/2 && rotPoint.y > rectY - rectHeight/2;
 }
-GeometricObject.prototype.pointPoint = function(pointOne, pointTwo) {//this function isn't really usefull as this is a really simple check
-	return pointOne.x === pointTwo.x && pointOne.y === pointTwo.y;//but it's there for consistency
+GeometricObject.prototype.pointPoint = function(pointOneX, pointOneY, pointTwoX, pointTwoY) {//this function isn't really usefull as this is a really simple check
+	return pointOneX === pointTwoX && pointOneY === pointTwoY;//but it's there for consistency
 }
 
 
@@ -110,17 +109,6 @@ function Point(x, y) {
 	return GeometricObject.call(this);
 }
 Point.prototype = Object.create(GeometricObject.prototype);
-Point.prototype.collision = function(geomObj) {
-	if(geomObj instanceof Circle) {
-		return this.pointCircle(this, geomObj);
-	} else if(geomObj instanceof Rectangle) {
-		return this.pointObb(this, geomObj);
-	} else if(geomObj instanceof Point) {
-		return this.pointPoint(this, point);
-	} else {
-		throw new TypeError("Not a valid geometric object");
-	}
-}
 
 function Vector(argOne, argTwo) {
 	if(typeof argOne === "number" && typeof argTwo === "number") {//they are coordinates
@@ -159,7 +147,6 @@ Object.defineProperties(Vector.prototype, {
 Vector.prototype.dotProduct = function(vector) {
 	return this.x*vector.x + this.y*vector.y;
 }
-
 Vector.prototype.normalize = function() {
 	this.x /= this.length;
 	this.y /= this.length;
@@ -173,6 +160,7 @@ function Rectangle(centerPoint, width, height, angle) {
 	this.center = centerPoint;
 	this.center._proxyMap = Rectangle.centerProxyMap;//TODO: alow differents parents
 	this.center._parents.push(this);//to have differents maps applied to them
+	//this creates references to an object and might prevent it from being GC'd
 
 	this.width = width;
 	this.height = height;
@@ -222,19 +210,44 @@ Object.defineProperties(Rectangle.prototype, {
 		}
 	}
 });
-Rectangle.prototype.collision = function(geomObj) {
-	if(geomObj instanceof Rectangle) {
-		if(this.angle === geomObj.angle) {
-			return this.aabbAabb(this, geomObj);
+Rectangle.prototype.collide = function(geomObjOne, geomObjTwo) {
+	var errStr = "Not a valid geometric object";
+	if(geomObjOne instanceof Rectangle) {
+		if(geomObjTwo instanceof Rectangle) {
+			if(geomObjOne.angle === geomObjTwo.angle) {
+					return this.aabbAabb(0, 0, geomObjOne.width, geomObjOne.height, isFinite(this.width) ? (geomObjTwo.center.x - geomObjOne.center.x + this.width)%this.width : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? (geomObjTwo.center.y - geomObjOne.center.y + this.height)%this.height : geomObjTwo.center.y - geomObjOne.center.y, geomObjTwo.width, geomObjTwo.height);
+				} else {
+					return this.obbObb(0, 0, geomObjOne.width, geomObjOne.height, geomObjOne.angle, isFinite(this.width) ? (geomObjTwo.center.x - geomObjOne.center.x + this.width)%this.width : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? (geomObjTwo.center.y - geomObjOne.center.y + this.height)%this.height : geomObjTwo.center.y - geomObjOne.center.y, geomObjTwo.width, geomObjTwo.height, geomObjOne.angle);
+				}
+		} else if(geomObjTwo instanceof Circle) {
+			return this.circleObb(0, 0, geomObjTwo.radius, isFinite(this.width) ? (geomObjTwo.center.x - geomObjOne.center.x + this.width)%this.width : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? (geomObjTwo.center.y - geomObjOne.center.y + this.height)%this.height : geomObjTwo.center.y - geomObjOne.center.y, geomObjOne.width, geomObjOne.height, geomObjOne.angle);
+		} else if(geomObjTwo instanceof Point) {
+			return this.pointObb(0, 0, isFinite(this.width) ? (geomObjTwo.x - geomObjOne.center.x + this.width)%this.width : geomObjTwo.x - geomObjOne.center.x, isFinite(this.height) ? (geomObjTwo.y - geomObjOne.center.y + this.height)%this.height : geomObjTwo.y - geomObjOne.center.y, geomObjOne.width, geomObjOne.height, geomObjOne.angle);
 		} else {
-			return this.obbObb(this, geomObj);
+			throw new TypeError(errStr);
 		}
-	} else if(geomObj instanceof Circle) {
-		return this.circleObb(geomObj, this);
-	} else if(geomObj instanceof Point) {
-		return this.pointObb(geomObj, this);
+	} else if(geomObjOne instanceof Circle) {
+		if(geomObjTwo instanceof Rectangle) {
+			return this.circleObb(0, 0, geomObjOne.radius, isFinite(this.width) ? (geomObjOne.center.x - geomObjTwo.center.x + this.width)%this.width : geomObjOne.center.x - geomObjTwo.center.x, isFinite(this.height) ? (geomObjOne.center.y - geomObjTwo.center.y + this.height)%this.height : geomObjOne.center.y - geomObjTwo.center.y, geomObjTwo.width, geomObjTwo.height, geomObjTwo.angle);
+		} else if(geomObjTwo instanceof Circle) {
+			return this.circleCircle(0, 0, geomObjOne.radius, isFinite(this.width) ? (geomObjTwo.center.x - geomObjOne.center.x + this.width)%this.width : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? (geomObjTwo.center.y - geomObjOne.center.y + this.height)%this.height : geomObjTwo.center.y - geomObjOne.center.y, geomObjTwo.radius);
+		} else if(geomObjTwo instanceof Point) {
+			return this.pointCircle(0, 0, isFinite(this.width) ? (geomObjTwo.x - geomObjOne.center.x + this.width)%this.width : geomObjTwo.x - geomObjOne.center.x, isFinite(this.height) ? (geomObjTwo.y - geomObjOne.center.y + this.height)%this.height : geomObjTwo.y - geomObjOne.center.y, geomObjOne.radius);
+		} else {
+			throw new TypeError(errStr);
+		}
+	} else if(geomObjOne instanceof Point) {
+		if(geomObjTwo instanceof Circle) {
+			return this.pointCircle(0, 0, isFinite(this.width) ? (geomObjOne.x - geomObjTwo.center.x + this.width)%this.width : geomObjOne.x - geomObjTwo.center.x, isFinite(this.height) ? (geomObjOne.y - geomObjTwo.center.y + this.height)%this.height : geomObjOne.y - geomObjTwo.center.y, geomObjTwo.radius);
+		} else if(geomObjTwo instanceof Rectangle) {
+			return this.pointObb(0, 0, isFinite(this.width) ? (geomObjOne.x - geomObjTwo.center.x + this.width)%this.width : geomObjOne.x - geomObjTwo.center.x, isFinite(this.height) ? (geomObjOne.y - geomObjTwo.center.y + this.height)%this.height : geomObjOne.y - geomObjTwo.center.y, geomObjTwo.width, geomObjTwo.height, geomObjTwo.angle);
+		} else if(geomObjTwo instanceof Point) {
+			return this.pointPoint(0, 0, isFinite(this.width) ? (geomObjTwo.x - geomObjOne.x + this.width)%this.width : geomObjTwo.x - geomObjOne.x, isFinite(this.height) ? (geomObjTwo.y - geomObjOne.y + this.height)%this.height : geomObjTwo.y - geomObjOne.y);
+		} else {
+			throw new TypeError(errStr);
+		}
 	} else {
-		throw new TypeError("Not a valid geometric object");
+		throw new TypeError(errStr);
 	}
 }
 Rectangle.prototype.project = function(axis) {
@@ -253,17 +266,7 @@ function Circle(centerPoint, radius) {
 	this.radius = radius;
 }
 Circle.prototype = Object.create(GeometricObject.prototype);
-Circle.prototype.collision = function(geomObj) {
-	if(geomObj instanceof Rectangle) {
-		return this.circleObb(this, geomObj);
-	} else if(geomObj instanceof Circle) {
-		return this.circleCircle(this, geomObj);
-	} else if(geomObj instanceof Point) {
-		return this.pointCircle(geomObj, this);
-	} else {
-		throw new TypeError("Not a valid geometric object");
-	}
-}
+
 
 if(typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = {
 	Point: Point,
