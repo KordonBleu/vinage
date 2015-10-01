@@ -58,7 +58,7 @@ GeometricObject.prototype.obbObb = function(rectOneX, rectOneY, rectOneWidth, re
 
 	//we can't check against the diagonal because it is too CPU intensive
 	var sideSum = rectTwo.width + rectTwo.height;//so we check against the sum of the sides which is > than the diagonal (not to much hopefully)
-	if (!this.aabbAabb(rectOne, new Rectangle(new Point(rectTwo.center.x, rectTwo.center.y), sideSum, sideSum))) return false;//eliminates most non-collisions
+	if(!this.aabbAabb(rectOneX, rectOneY, rectOneWidth, rectOneHeight, rectTwoX, rectTwoY, sideSum, sideSum)) return false;//eliminates most non-collisions
 
 	var axesVectOne = [new Vector(1, 0), new Vector(0, 1)],//rectOne is an AABB
 		axesVectTwo = [];
@@ -82,13 +82,10 @@ GeometricObject.prototype.circleCircle = function(circleOneX, circleOneY, circle
 	return Math.pow(circleOneX - circleTwoX, 2) + Math.pow(circleOneY - circleTwoY, 2) < Math.pow(circleOneRadius + circleTwoRadius, 2);
 }
 GeometricObject.prototype.aabbAabb = function(rectOneX, rectOneY, rectOneWidth, rectOneHeight, rectTwoX, rectTwoY, rectTwoWidth, rectTwoHeight) {
-	if(rectOneX - rectTwoWidth/2 >= rectOneX + rectOneWidth/2
+	return ! (rectTwoX - rectTwoWidth/2 >= rectOneX + rectOneWidth/2
 	|| rectTwoX + rectTwoWidth/2 <= rectOneX - rectOneWidth/2
 	|| rectTwoY - rectTwoHeight/2 >= rectOneY + rectOneHeight/2
-	|| rectTwoY + rectTwoHeight/2 <= rectOneY - rectOneHeight/2)
-		return false;
-	else
-		return true;
+	|| rectTwoY + rectTwoHeight/2 <= rectOneY - rectOneHeight/2);
 }
 GeometricObject.prototype.pointCircle = function(pointX, pointY, circleX, circleY, radius) {
 	return Math.pow(circleX - pointX, 2) + Math.pow(circleY - pointY, 2) < Math.pow(radius, 2);
@@ -217,7 +214,7 @@ Rectangle.prototype.collide = function(geomObjOne, geomObjTwo) {
 			if(geomObjOne.angle === geomObjTwo.angle) {
 					return this.aabbAabb(0, 0, geomObjOne.width, geomObjOne.height, isFinite(this.width) ? (geomObjTwo.center.x - geomObjOne.center.x + this.width)%this.width : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? (geomObjTwo.center.y - geomObjOne.center.y + this.height)%this.height : geomObjTwo.center.y - geomObjOne.center.y, geomObjTwo.width, geomObjTwo.height);
 				} else {
-					return this.obbObb(0, 0, geomObjOne.width, geomObjOne.height, geomObjOne.angle, isFinite(this.width) ? (geomObjTwo.center.x - geomObjOne.center.x + this.width)%this.width : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? (geomObjTwo.center.y - geomObjOne.center.y + this.height)%this.height : geomObjTwo.center.y - geomObjOne.center.y, geomObjTwo.width, geomObjTwo.height, geomObjOne.angle);
+					return this.obbObb(0, 0, geomObjOne.width, geomObjOne.height, geomObjOne.angle, isFinite(this.width) ? (geomObjTwo.center.x - geomObjOne.center.x + this.width)%this.width : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? (geomObjTwo.center.y - geomObjOne.center.y + this.height)%this.height : geomObjTwo.center.y - geomObjOne.center.y, geomObjTwo.width, geomObjTwo.height, geomObjTwo.angle);
 				}
 		} else if(geomObjTwo instanceof Circle) {
 			return this.circleObb(0, 0, geomObjTwo.radius, isFinite(this.width) ? (geomObjTwo.center.x - geomObjOne.center.x + this.width)%this.width : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? (geomObjTwo.center.y - geomObjOne.center.y + this.height)%this.height : geomObjTwo.center.y - geomObjOne.center.y, geomObjOne.width, geomObjOne.height, geomObjOne.angle);

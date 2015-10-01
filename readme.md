@@ -65,20 +65,20 @@ If you want to check for collision, you must first define a **universe** where c
 
 Most of the time you will want them to happen in an Cartesian plane, ie an infinite universe. You can create it like this:
 ```JavaScript
-var myUniverse = new Rectangle(0, 0, Infinity, Infinity);
+var myUniverse = new Rectangle(new Point(0, 0), Infinity, Infinity);
 ```
 
 However, if you want to implement wrap-around, you will need a bounded and finite universe:
 ```JavaScript
-var myUniverse = new Rectangle(0, 0, 1000, 1000);
+var myUniverse = new Rectangle(new Point(0, 0), 1000, 1000);
 ```
 If your universe is finite and one of your geometric object overlap the "edge" of the universe, it will be as if this part of it was actually on the other side of the universe.
-Note that your geometrical objects can be beyond the limits of the universe; when a collision test will be made, the test is internally remapped inside the universe.
+Note that your geometric objects can be beyond the limits of the universe; tests are internally remapped inside the universe.
 ```JavaScript
 var myRectangle = new Rectangle(238, 153, 50, 50),
 	myCircle = new Circle(new Point(-56, 27), 12),
-	myUniverse = new Rectangle(-25, 0, 100, 100);
-//it is valid to check if myRectangle and myCircle collide under myUniverse
+	myUniverse = new Rectangle(new Point(-25, 0), 100, 100);
+//it is valid to check whether myRectangle and myCircle collide under myUniverse
 ```
 
 
@@ -109,3 +109,7 @@ Vector.prototype._proxyMap = {
 	y: ["orthogonalVector", "length"]//if myVec.y is modified, myVec._upToDate.orthogonalVector and myVec._upToDate.length will both be set to false
 };
 ```
+
+## Testing
+You can open `graphical-tester.svg` in your browser and move around elements to check if collisions work as intended.
+When the library reports a collision the colliding elements are red, otherwise they are green.
