@@ -34,19 +34,17 @@ GeometricObject.proxyHandler = {
 	}
 }
 GeometricObject.prototype.circleObb = function(circleX, circleY, circleRadius, rectX, rectY, rectWidth, rectHeight, rectAngle) {//haha, rectAngle
-	var rot = rectAngle > 0 ? -rectAngle : -rectAngle + Math.PI,
-		deltaX = circleX - rectX,
-		deltaY = circleY - rectY,
-		tCircleX = Math.cos(rot) * deltaX - Math.sin(rot) * deltaY + rectX,//rotate the circle around the center of the OOB
-		tCircleY = Math.sin(rot) * deltaX + Math.cos(rot) * deltaY + rectY;//so that the OBB can be treated as an AABB
-	deltaX = Math.abs(tCircleX - rectX);
-	deltaY = Math.abs(tCircleY - rectY);
+	var tCircleX = Math.cos(-rectAngle) * (circleX - rectX) - Math.sin(-rectAngle) * (circleY - rectY) + rectX,//rotate the circle around the center of the OOB
+		tCircleY = Math.sin(-rectAngle) * (circleX - rectX) + Math.cos(-rectAngle) * (circleY - rectY) + rectY;//so that the OBB can be treated as an AABB
 
-	if(deltaX > rectWidth / 2 + circleRadius || deltaY > rectHeight / 2 + circleRadius) return false;
+	var deltaX = Math.abs(tCircleX - rectX),
+		deltaY = Math.abs(tCircleY - rectY);
 
-	if(deltaX <= rectWidth / 2 || deltaY <= rectHeight / 2) return true;
+	if(deltaX > rectWidth/2 + circleRadius || deltaY > rectHeight/2 + circleRadius) return false;
 
-	return Math.pow(deltaX - rectHeight/2, 2) + Math.pow(deltaY - rectWidth/2, 2) <= Math.pow(circleRadius, 2);
+	if(deltaX <= rectWidth/2 || deltaY <= rectHeight/2) return true;
+
+	return Math.pow(deltaX - rectWidth/2, 2) + Math.pow(deltaY - rectHeight/2, 2) <= Math.pow(circleRadius, 2);
 }
 GeometricObject.prototype.obbObb = function(rectOneX, rectOneY, rectOneWidth, rectOneHeigth, rectOneAngle, rectTwoX, rectTwoY, rectTwoWidth, rectTwoHeigth, rectTwoAngle) {
 	//rotate the first OOB to transform it in AABB to simplify calculations
