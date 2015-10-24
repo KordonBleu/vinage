@@ -7,16 +7,24 @@ function GeometricObject() {
 	this._cache = {};
 	this._upToDate = {};
 	this._parents = [];
-	if(typeof Proxy !== "undefined") return new Proxy(this, GeometricObject.proxyHandler);
+	if(typeof Proxy !== "undefined") {
+		this._proxy = new Proxy(this, GeometricObject.proxyHandler);
+		return this._proxy;
+	}
 }
 GeometricObject.proxyHandler = {
-	set: function(target, name, value) {
-		if(name === "_proxyMap") {
-			target[name] = value;
+	set: function(target, name, value, receiver) {
+		if(receiver !== target._proxy) {//if the proxy is used as an object's prototype
+			Object.defineProperty(receiver, name, {
+				value: value
+			});
 			return true;
 		}
+
+		target[name] = value;
+
+		if(name === "_proxyMap") return true;
 		if(target.hasOwnProperty(name)) {
-			target[name] = value;
 			for(var key in target._proxyMap) {
 				if(key === name) {
 					target._proxyMap[key].forEach(function(key) {
@@ -46,34 +54,35 @@ GeometricObject.prototype.circleObb = function(circleX, circleY, circleRadius, r
 
 	return Math.pow(deltaX - rectWidth/2, 2) + Math.pow(deltaY - rectHeight/2, 2) <= Math.pow(circleRadius, 2);
 }
-GeometricObject.prototype.obbObb = function(rectOneX, rectOneY, rectOneWidth, rectOneHeigth, rectOneAngle, rectTwoX, rectTwoY, rectTwoWidth, rectTwoHeigth, rectTwoAngle) {
-	//rotate the first OOB to transform it in AABB to simplify calculations
-	/*var rectTwoRot = rectTwo.angle - rectOne.angle,
-		rectOne = new Rectangle(rectOne.center, rectOne.width, rectOne.height),
-		rectTwo = new Rectangle(rectTwo.center, rectTwo.width, rectTwo.height, rectTwoRot);*/
-	var rectOne = new Rectangle(new Point(rectOneX, rectOneY), rectOneWidth, rectOneHeigth, 0),
-		rectTwo = new Rectangle(new Point(rectTwoX, rectTwoY), rectTwoWidth, rectTwoHeigth, rectTwoAngle - rectOneAngle);
+GeometricObject.prototype.sat = function(objOneVertices, objTwoVertices) {
+	var axes = [];
+	function getAxes(vertices) {
+		vertices.forEach(function(vertex, index, vertices) {
+			axes.push(new Vector(vertex, vertices[(index - 1 + vertices.length)%vertices.length]));
+		});
+		return axes;
+	}
+	getAxes(objOneVertices);
+	getAxes(objTwoVertices);
 
-	//we can't check against the diagonal because it is too CPU intensive
-	var sideSum = rectTwo.width + rectTwo.height;//so we check against the sum of the sides which is > than the diagonal (not to much hopefully)
-	if(!this.aabbAabb(rectOneX, rectOneY, rectOneWidth, rectOneHeight, rectTwoX, rectTwoY, sideSum, sideSum)) return false;//eliminates most non-collisions
+	function project(axis, vertices) {
+		var min = axis.dotProduct(vertices[0]),
+			max = min;
+		vertices.slice(1).forEach(function(vertex) {//shallow copy
+			var pVert = axis.dotProduct(vertex);
+			if(pVert < min) min = pVert;
+			else if(pVert > max) max = pVert;
+		});
+		return {min: min, max: max};
+	}
+	function overlap(ovOne, ovTwo) {
+		return ((ovOne.min < ovTwo.max && ovTwo.max < ovOne.max) || (ovOne.min < ovTwo.min && ovTwo.min < ovOne.max)) || ((ovTwo.min < ovOne.max && ovOne.max < ovTwo.max) || (ovTwo.min < ovOne.min && ovOne.min < ovTwo.max));
+	}
+	return axes.every(function(axis) {
+		var projOne = project(axis, objOneVertices),
+		projTwo = project(axis, objTwoVertices);
 
-	var axesVectOne = [new Vector(1, 0), new Vector(0, 1)],//rectOne is an AABB
-		axesVectTwo = [];
-	rectTwo.vertices.forEach(function(vertex, index, array) {
-		var prevVertex = index === 0 ? array[array.length - 1] : array[index - 1],
-		vector = new Vector(vertex, prevVertex).orthogonalVector;//this is stupid for a rectangle, not for a polygon
-
-		//vector.normalize();
-		axesVectTwo.push(vector);
-	});
-	var axesVect = axesVectOne.concat(axesVectTwo);
-
-	return !axesVect.some(function(axis) {
-		var projOne = rectOne.project(axis),
-			projTwo = rectTwo.project(axis);
-
-		return projOne.max < projTwo.min || projTwo.max < projOne.min;//overlapp or not
+		return overlap(projOne, projTwo);
 	});
 }
 GeometricObject.prototype.circleCircle = function(circleOneX, circleOneY, circleOneRadius, circleTwoX, circleTwoY, circleTwoRadius) {
@@ -206,13 +215,39 @@ Object.defineProperties(Rectangle.prototype, {
 	}
 });
 Rectangle.prototype.collide = function(geomObjOne, geomObjTwo) {
+	function makePseudoClones(vertices) {
+		var pseudoClone = [];
+		vertices.forEach(function(vertex) {
+			pseudoClone.push(Object.create(vertex));
+		});
+		return pseudoClone;
+	}
 	var errStr = "Not a valid geometric object";
 	if(geomObjOne instanceof Rectangle) {
 		if(geomObjTwo instanceof Rectangle) {
 			if(geomObjOne.angle === geomObjTwo.angle) {
 					return this.aabbAabb(0, 0, geomObjOne.width, geomObjOne.height, isFinite(this.width) ? (geomObjTwo.center.x - geomObjOne.center.x + this.width)%this.width : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? (geomObjTwo.center.y - geomObjOne.center.y + this.height)%this.height : geomObjTwo.center.y - geomObjOne.center.y, geomObjTwo.width, geomObjTwo.height);
 				} else {
-					return this.obbObb(0, 0, geomObjOne.width, geomObjOne.height, geomObjOne.angle, isFinite(this.width) ? (geomObjTwo.center.x - geomObjOne.center.x + this.width)%this.width : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? (geomObjTwo.center.y - geomObjOne.center.y + this.height)%this.height : geomObjTwo.center.y - geomObjOne.center.y, geomObjTwo.width, geomObjTwo.height, geomObjTwo.angle);
+					var vertiOne = makePseudoClones(geomObjOne.vertices),
+						vertiTwo = makePseudoClones(geomObjTwo.vertices);
+					if(isFinite(this.width)) {
+						vertiOne.forEach(function(vertex) {
+							vertex.x -= geomObjOne.center.x;
+						});
+						vertiTwo.forEach(function(vertex) {
+							vertex.x -= geomObjOne.center.x + geomObjTwo.center.x;
+						});
+					}
+					if(isFinite(this.height)) {
+						vertiOne.forEach(function(vertex) {
+							vertex.y -= geomObjOne.center.y;
+						});
+						vertiTwo.forEach(function(vertex) {
+							vertex.y -= geomObjOne.center.y + geomObjTwo.center.y;
+						});
+					}
+
+					return this.sat(vertiOne, vertiTwo);
 				}
 		} else if(geomObjTwo instanceof Circle) {
 			return this.circleObb(0, 0, geomObjTwo.radius, isFinite(this.width) ? (geomObjTwo.center.x - geomObjOne.center.x + this.width)%this.width : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? (geomObjTwo.center.y - geomObjOne.center.y + this.height)%this.height : geomObjTwo.center.y - geomObjOne.center.y, geomObjOne.width, geomObjOne.height, geomObjOne.angle);
@@ -244,16 +279,6 @@ Rectangle.prototype.collide = function(geomObjOne, geomObjTwo) {
 	} else {
 		throw new TypeError(errStr);
 	}
-}
-Rectangle.prototype.project = function(axis) {
-	var min = axis.dotProduct(this.vertices[0]),
-		max = min;
-	for(var i = 1; i !== this.vertices.length - 1; i++) {
-		var proj = axis.dotProduct(this.vertices[i]);
-		if(proj < min) min = proj;
-		else if(proj > max) max = proj;
-	}
-	return {min: min, max: max};
 }
 
 function Circle(centerPoint, radius) {

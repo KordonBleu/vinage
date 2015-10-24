@@ -96,8 +96,8 @@ dCircle.prototype.moveImage = function() {
 	this.image.setAttribute("transform", "translate(" + this.box.center.x + ", " + this.box.center.y + ")");
 }
 
-new dRect(new Point(600, 150), 200, 50, 73245*Math.PI/6323);
-//new dRect(new Point(400, 100), 50, 50);
+new dRect(new Point(400, 100), 50, 50, 73245*Math.PI/6323);
+new dRect(new Point(600, 150), 270, 200, 3*Math.PI/4);
 
 //new dCircle(new Point(400, 200), 30);
-new dCircle(new Point(400, 400), 100);
+//new dCircle(new Point(400, 400), 100);
