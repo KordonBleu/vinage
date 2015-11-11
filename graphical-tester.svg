@@ -1,4 +1,14 @@
 <svg version="1.1" baseProfile="full" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<defs>
+		<pattern id="grid" width="25" height="25" patternUnits="userSpaceOnUse">
+			<path d="m 25 0 v 25 h -25" fill="transparent" stroke="black"/>
+		</pattern>
+		<pattern id="mainUniverse" width="500" height="500" patternUnits="userSpaceOnUse">
+		</pattern>
+	</defs>
+	<rect width="100%" height="100%" fill="url(#grid)"/>
+	<rect width="100%" height="100%" fill="url(#mainUniverse)"/>
+
 	<script xlink:href="vinage.js"/>
 	<script xlink:href="graphical-tester.js"/>
 </svg>

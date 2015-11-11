@@ -7,14 +7,14 @@ function GeometricObject() {
 	this._cache = {};
 	this._upToDate = {};
 	this._parents = [];
-	if(typeof Proxy !== "undefined") {
+	if (typeof Proxy !== "undefined") {
 		this._proxy = new Proxy(this, GeometricObject.proxyHandler);
 		return this._proxy;
 	}
 }
 GeometricObject.proxyHandler = {
 	set: function(target, name, value, receiver) {
-		if(receiver !== target._proxy) {//if the proxy is used as an object's prototype
+		if (receiver !== target._proxy) {//if the proxy is used as an object's prototype
 			Object.defineProperty(receiver, name, {
 				value: value
 			});
@@ -23,12 +23,12 @@ GeometricObject.proxyHandler = {
 
 		target[name] = value;
 
-		if(name === "_proxyMap") return true;
-		if(target.hasOwnProperty(name)) {
+		if (name === "_proxyMap") return true;
+		if (target.hasOwnProperty(name)) {
 			for(var key in target._proxyMap) {
-				if(key === name) {
+				if (key === name) {
 					target._proxyMap[key].forEach(function(key) {
-						if(target._parents.length === 0) target._upToDate[key] = false;
+						if (target._parents.length === 0) target._upToDate[key] = false;
 						else target._parents.forEach(function(parent) {
 							parent._upToDate[key] = false;
 						});
@@ -48,9 +48,9 @@ GeometricObject.prototype.circleObb = function(circleX, circleY, circleRadius, r
 	var deltaX = Math.abs(tCircleX - rectX),
 		deltaY = Math.abs(tCircleY - rectY);
 
-	if(deltaX > rectWidth/2 + circleRadius || deltaY > rectHeight/2 + circleRadius) return false;
+	if (deltaX > rectWidth/2 + circleRadius || deltaY > rectHeight/2 + circleRadius) return false;
 
-	if(deltaX <= rectWidth/2 || deltaY <= rectHeight/2) return true;
+	if (deltaX <= rectWidth/2 || deltaY <= rectHeight/2) return true;
 
 	return Math.pow(deltaX - rectWidth/2, 2) + Math.pow(deltaY - rectHeight/2, 2) <= Math.pow(circleRadius, 2);
 }
@@ -70,8 +70,8 @@ GeometricObject.prototype.sat = function(objOneVertices, objTwoVertices) {
 			max = min;
 		vertices.slice(1).forEach(function(vertex) {//shallow copy
 			var pVert = axis.dotProduct(vertex);
-			if(pVert < min) min = pVert;
-			else if(pVert > max) max = pVert;
+			if (pVert < min) min = pVert;
+			else if (pVert > max) max = pVert;
 		});
 		return {min: min, max: max};
 	}
@@ -102,8 +102,8 @@ GeometricObject.prototype.pointObb = function(pointX, pointY, rectX, rectY, rect
 
 	return rotPoint.x < rectX + rectWidth/2 && rotPoint.x > rectX - rectWidth/2 && rotPoint.y < rectY + rectHeight/2 && rotPoint.y > rectY - rectHeight/2;
 }
-GeometricObject.prototype.pointPoint = function(pointOneX, pointOneY, pointTwoX, pointTwoY) {//this function isn't really usefull as this is a really simple check
-	return pointOneX === pointTwoX && pointOneY === pointTwoY;//but it's there for consistency
+GeometricObject.prototype.pointPoint = function(pointOneX, pointOneY, pointTwoX, pointTwoY) {
+	return pointOneX === pointTwoX && pointOneY === pointTwoY;
 }
 
 
@@ -115,10 +115,10 @@ function Point(x, y) {
 Point.prototype = Object.create(GeometricObject.prototype);
 
 function Vector(argOne, argTwo) {
-	if(typeof argOne === "number" && typeof argTwo === "number") {//they are coordinates
+	if (typeof argOne === "number" && typeof argTwo === "number") {//they are coordinates
 		this.x = argOne;
 		this.y = argTwo;
-	} else if(argOne instanceof Point && argTwo instanceof Point) {
+	} else if (argOne instanceof Point && argTwo instanceof Point) {
 		this.x = argTwo.x - argOne.x;
 		this.y = argTwo.y - argOne.y;
 	}
@@ -131,7 +131,7 @@ Vector.prototype._proxyMap = {
 Object.defineProperties(Vector.prototype, {
 	"orthogonalVector": {
 		get: function() {
-			if(!this._upToDate.orthogonalVector) {
+			if (!this._upToDate.orthogonalVector) {
 				this._upToDate.orthogonalVector = true;
 				this._cache.orthogonalVector = new Vector(-this.y, this.x);
 			}
@@ -140,7 +140,7 @@ Object.defineProperties(Vector.prototype, {
 	},
 	"length": {
 		get: function() {
-			if(!this._upToDate.length) {
+			if (!this._upToDate.length) {
 				this._upToDate.length = true;
 				this._cache.length = Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
 			}
@@ -162,7 +162,7 @@ Vector.prototype.apply = function(point) {
 
 function Rectangle(centerPoint, width, height, angle) {
 	this.center = centerPoint;
-	this.center._proxyMap = Rectangle.centerProxyMap;//TODO: alow differents parents
+	this.center._proxyMap = Rectangle.centerProxyMap;//TODO: allow differents parents
 	this.center._parents.push(this);//to have differents maps applied to them
 	//this creates references to an object and might prevent it from being GC'd
 
@@ -186,7 +186,7 @@ Rectangle.centerProxyMap = {
 Object.defineProperties(Rectangle.prototype, {
 	"vertices": {
 		get: function() {
-			if(!this._upToDate.vertices) {
+			if (!this._upToDate.vertices) {
 				this._upToDate.vertices = true;
 
 				this._cache.vertices = [];
@@ -206,7 +206,7 @@ Object.defineProperties(Rectangle.prototype, {
 	},
 	"AAVertices": {
 		get: function() {
-			if(!this._upToDate.AAVertices) {
+			if (!this._upToDate.AAVertices) {
 				this._upToDate.AAVertices = true;
 				this._cache.AAVertices = [new Point(this.center.x - this.width/2, this.center.y - this.height/2), new Point(this.center.x + this.width/2, this.center.y - this.height/2), new Point(this.center.x + this.width/2, this.center.y + this.height/2), new Point(this.center.x - this.width/2, this.center.y + this.height/2)];
 			}
@@ -222,57 +222,62 @@ Rectangle.prototype.collide = function(geomObjOne, geomObjTwo) {
 		});
 		return pseudoClone;
 	}
+	function mod(dividend, divisor) {
+		return (dividend%divisor + divisor) % divisor;
+	}
+	function getDelta(coordOne, coordTwo, wrapLgt) {
+		var delta = mod(coordOne, wrapLgt) - mod(coordTwo, wrapLgt);
+		if (delta > wrapLgt/2) delta -= wrapLgt;
+		else if (delta < -wrapLgt/2) delta += wrapLgt;
+
+		return delta;//shortest possible delta
+	}
 	var errStr = "Not a valid geometric object";
-	if(geomObjOne instanceof Rectangle) {
-		if(geomObjTwo instanceof Rectangle) {
-			if(geomObjOne.angle === geomObjTwo.angle) {
+	if (geomObjOne instanceof Rectangle) {
+		if (geomObjTwo instanceof Rectangle) {
+			if (geomObjOne.angle === geomObjTwo.angle) {
 					return this.aabbAabb(0, 0, geomObjOne.width, geomObjOne.height, isFinite(this.width) ? (geomObjTwo.center.x - geomObjOne.center.x + this.width)%this.width : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? (geomObjTwo.center.y - geomObjOne.center.y + this.height)%this.height : geomObjTwo.center.y - geomObjOne.center.y, geomObjTwo.width, geomObjTwo.height);
 				} else {
-					var vertiOne = makePseudoClones(geomObjOne.vertices),
-						vertiTwo = makePseudoClones(geomObjTwo.vertices);
-					if(isFinite(this.width)) {
-						vertiOne.forEach(function(vertex) {
-							vertex.x -= geomObjOne.center.x;
-						});
+					var vertiTwo = makePseudoClones(geomObjTwo.vertices);
+					if (isFinite(this.width)) {
+						var uWidth = this.width;
 						vertiTwo.forEach(function(vertex) {
-							vertex.x -= geomObjOne.center.x + geomObjTwo.center.x;
+							vertex.x = getDelta(geomObjTwo.center.x, geomObjOne.center.x, uWidth) + geomObjOne.center.x + geomObjTwo.center.x - vertex.x;
 						});
 					}
-					if(isFinite(this.height)) {
-						vertiOne.forEach(function(vertex) {
-							vertex.y -= geomObjOne.center.y;
-						});
+					if (isFinite(this.height)) {
+						var uHeight = this.height;
 						vertiTwo.forEach(function(vertex) {
-							vertex.y -= geomObjOne.center.y + geomObjTwo.center.y;
+							vertex.y = getDelta(geomObjTwo.center.y, geomObjOne.center.y, uHeight) + geomObjOne.center.y + geomObjTwo.center.y - vertex.y;
 						});
 					}
 
-					return this.sat(vertiOne, vertiTwo);
+					return this.sat(geomObjOne.vertices, vertiTwo);
 				}
-		} else if(geomObjTwo instanceof Circle) {
-			return this.circleObb(0, 0, geomObjTwo.radius, isFinite(this.width) ? (geomObjTwo.center.x - geomObjOne.center.x + this.width)%this.width : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? (geomObjTwo.center.y - geomObjOne.center.y + this.height)%this.height : geomObjTwo.center.y - geomObjOne.center.y, geomObjOne.width, geomObjOne.height, geomObjOne.angle);
-		} else if(geomObjTwo instanceof Point) {
-			return this.pointObb(0, 0, isFinite(this.width) ? (geomObjTwo.x - geomObjOne.center.x + this.width)%this.width : geomObjTwo.x - geomObjOne.center.x, isFinite(this.height) ? (geomObjTwo.y - geomObjOne.center.y + this.height)%this.height : geomObjTwo.y - geomObjOne.center.y, geomObjOne.width, geomObjOne.height, geomObjOne.angle);
+		} else if (geomObjTwo instanceof Circle) {
+			return this.circleObb(0, 0, geomObjTwo.radius, isFinite(this.width) ? getDelta(geomObjTwo.center.x, geomObjOne.center.x, this.width) : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? getDelta(geomObjTwo.center.y,  geomObjOne.center.y, this.height) : geomObjTwo.center.y - geomObjOne.center.y, geomObjOne.width, geomObjOne.height, geomObjOne.angle);
+		} else if (geomObjTwo instanceof Point) {
+			return this.pointObb(0, 0, isFinite(this.width) ? getDelta(geomObjTwo.x, geomObjOne.center.x, this.width) : geomObjTwo.x - geomObjOne.center.x, isFinite(this.height) ? getDelta(geomObjTwo.y, geomObjOne.center.y, this.height) : geomObjTwo.y - geomObjOne.center.y, geomObjOne.width, geomObjOne.height, geomObjOne.angle);
 		} else {
 			throw new TypeError(errStr);
 		}
-	} else if(geomObjOne instanceof Circle) {
-		if(geomObjTwo instanceof Rectangle) {
-			return this.circleObb(0, 0, geomObjOne.radius, isFinite(this.width) ? (geomObjOne.center.x - geomObjTwo.center.x + this.width)%this.width : geomObjOne.center.x - geomObjTwo.center.x, isFinite(this.height) ? (geomObjOne.center.y - geomObjTwo.center.y + this.height)%this.height : geomObjOne.center.y - geomObjTwo.center.y, geomObjTwo.width, geomObjTwo.height, geomObjTwo.angle);
-		} else if(geomObjTwo instanceof Circle) {
-			return this.circleCircle(0, 0, geomObjOne.radius, isFinite(this.width) ? (geomObjTwo.center.x - geomObjOne.center.x + this.width)%this.width : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? (geomObjTwo.center.y - geomObjOne.center.y + this.height)%this.height : geomObjTwo.center.y - geomObjOne.center.y, geomObjTwo.radius);
-		} else if(geomObjTwo instanceof Point) {
-			return this.pointCircle(0, 0, isFinite(this.width) ? (geomObjTwo.x - geomObjOne.center.x + this.width)%this.width : geomObjTwo.x - geomObjOne.center.x, isFinite(this.height) ? (geomObjTwo.y - geomObjOne.center.y + this.height)%this.height : geomObjTwo.y - geomObjOne.center.y, geomObjOne.radius);
+	} else if (geomObjOne instanceof Circle) {
+		if (geomObjTwo instanceof Rectangle) {
+			return this.circleObb(0, 0, geomObjOne.radius, isFinite(this.width) ? getDelta(geomObjOne.center.x, geomObjTwo.center.x, this.width) : geomObjOne.center.x - geomObjTwo.center.x, isFinite(this.height) ? getDelta(geomObjOne.center.y, geomObjTwo.center.y, this.height) : geomObjOne.center.y - geomObjTwo.center.y, geomObjTwo.width, geomObjTwo.height, geomObjTwo.angle);
+		} else if (geomObjTwo instanceof Circle) {
+			return this.circleCircle(0, 0, geomObjOne.radius, isFinite(this.width) ? getDelta(geomObjTwo.center.x, geomObjOne.center.x, this.width) : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? getDelta(geomObjTwo.center.y, geomObjOne.center.y, this.height) : geomObjTwo.center.y - geomObjOne.center.y, geomObjTwo.radius);
+		} else if (geomObjTwo instanceof Point) {
+			return this.pointCircle(0, 0, isFinite(this.width) ? getDelta(geomObjTwo.x, geomObjOne.center.x, this.width) : geomObjTwo.x - geomObjOne.center.x, isFinite(this.height) ? getDelta(geomObjTwo.y, geomObjOne.center.y, this.height) : geomObjTwo.y - geomObjOne.center.y, geomObjOne.radius);
 		} else {
 			throw new TypeError(errStr);
 		}
-	} else if(geomObjOne instanceof Point) {
-		if(geomObjTwo instanceof Circle) {
-			return this.pointCircle(0, 0, isFinite(this.width) ? (geomObjOne.x - geomObjTwo.center.x + this.width)%this.width : geomObjOne.x - geomObjTwo.center.x, isFinite(this.height) ? (geomObjOne.y - geomObjTwo.center.y + this.height)%this.height : geomObjOne.y - geomObjTwo.center.y, geomObjTwo.radius);
-		} else if(geomObjTwo instanceof Rectangle) {
-			return this.pointObb(0, 0, isFinite(this.width) ? (geomObjOne.x - geomObjTwo.center.x + this.width)%this.width : geomObjOne.x - geomObjTwo.center.x, isFinite(this.height) ? (geomObjOne.y - geomObjTwo.center.y + this.height)%this.height : geomObjOne.y - geomObjTwo.center.y, geomObjTwo.width, geomObjTwo.height, geomObjTwo.angle);
-		} else if(geomObjTwo instanceof Point) {
-			return this.pointPoint(0, 0, isFinite(this.width) ? (geomObjTwo.x - geomObjOne.x + this.width)%this.width : geomObjTwo.x - geomObjOne.x, isFinite(this.height) ? (geomObjTwo.y - geomObjOne.y + this.height)%this.height : geomObjTwo.y - geomObjOne.y);
+	} else if (geomObjOne instanceof Point) {
+		if (geomObjTwo instanceof Circle) {
+			return this.pointCircle(0, 0, isFinite(this.width) ? getDelta(geomObjOne.x,  geomObjTwo.center.x, this.width) : geomObjOne.x - geomObjTwo.center.x, isFinite(this.height) ? getDelta(geomObjOne.y, geomObjTwo.center.y, this.height) : geomObjOne.y - geomObjTwo.center.y, geomObjTwo.radius);
+		} else if (geomObjTwo instanceof Rectangle) {
+			return this.pointObb(0, 0, isFinite(this.width) ? getDelta(geomObjOne.x, geomObjTwo.center.x, this.width) : geomObjOne.x - geomObjTwo.center.x, isFinite(this.height) ? getDelta(geomObjOne.y, geomObjTwo.center.y, this.height) : geomObjOne.y - geomObjTwo.center.y, geomObjTwo.width, geomObjTwo.height, geomObjTwo.angle);
+		} else if (geomObjTwo instanceof Point) {
+			return this.pointPoint(0, 0, isFinite(this.width) ? mod(geomObjTwo.x, this.width) - mod(geomObjOne.x, this.width) : geomObjTwo.x - geomObjOne.x, isFinite(this.height) ? mod(geomObjTwo.y, this.height) - mod(geomObjOne.y, this.height) : geomObjTwo.y - geomObjOne.y);
 		} else {
 			throw new TypeError(errStr);
 		}
@@ -288,7 +293,7 @@ function Circle(centerPoint, radius) {
 Circle.prototype = Object.create(GeometricObject.prototype);
 
 
-if(typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = {
+if (typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = {
 	Point: Point,
 	Vector: Vector,
 	Rectangle: Rectangle,
