@@ -52,7 +52,9 @@ GeometricObject.prototype.circleObb = function(circleX, circleY, circleRadius, r
 
 	if (deltaX <= rectWidth/2 || deltaY <= rectHeight/2) return true;
 
-	return Math.pow(deltaX - rectWidth/2, 2) + Math.pow(deltaY - rectHeight/2, 2) <= Math.pow(circleRadius, 2);
+	var storeX = deltaX - rectWidth/2, // store the result
+		storeY = deltaY - rectHeight/2;
+	return storeX*storeX + storeY*storeY <= circleRadius*circleRadius;
 }
 GeometricObject.prototype.sat = function(objOneVertices, objTwoVertices) {
 	var axes = [];
@@ -86,7 +88,10 @@ GeometricObject.prototype.sat = function(objOneVertices, objTwoVertices) {
 	});
 }
 GeometricObject.prototype.circleCircle = function(circleOneX, circleOneY, circleOneRadius, circleTwoX, circleTwoY, circleTwoRadius) {
-	return Math.pow(circleOneX - circleTwoX, 2) + Math.pow(circleOneY - circleTwoY, 2) < Math.pow(circleOneRadius + circleTwoRadius, 2);
+	var deltaX = circleOneX - circleTwoX,
+		deltaY = circleOneY - circleTwoY,
+		deltaRadius = circleOneRadius + circleTwoRadius; // store the result
+	return deltaX*deltaX + deltaY*deltaY < deltaRadius*deltaRadius;
 }
 GeometricObject.prototype.aabbAabb = function(rectOneX, rectOneY, rectOneWidth, rectOneHeight, rectTwoX, rectTwoY, rectTwoWidth, rectTwoHeight) {
 	return ! (rectTwoX - rectTwoWidth/2 >= rectOneX + rectOneWidth/2
@@ -95,7 +100,9 @@ GeometricObject.prototype.aabbAabb = function(rectOneX, rectOneY, rectOneWidth, 
 	|| rectTwoY + rectTwoHeight/2 <= rectOneY - rectOneHeight/2);
 }
 GeometricObject.prototype.pointCircle = function(pointX, pointY, circleX, circleY, radius) {
-	return Math.pow(circleX - pointX, 2) + Math.pow(circleY - pointY, 2) < Math.pow(radius, 2);
+	var deltaX = circleX - pointX,
+		deltaY = circleY - pointY; // store the result
+	return deltaX*deltaX + deltaY*deltaY < radius*radius;
 }
 GeometricObject.prototype.pointObb = function(pointX, pointY, rectX, rectY, rectWidth, rectHeight, rectAngle) {
 	var rotPoint = new Point(Math.cos(-rectAngle)*(pointX - rectX) - Math.sin(-rectAngle)*(pointY - rectY) + rectX, Math.sin(-rectAngle)*(pointX - rectX) + Math.cos(-rectAngle)*(pointY - rectY) + rectY);
@@ -142,7 +149,7 @@ Object.defineProperties(Vector.prototype, {
 		get: function() {
 			if (!this._upToDate.length) {
 				this._upToDate.length = true;
-				this._cache.length = Math.sqrt(Math.pow(this.x, 2) + Math.pow(this.y, 2));
+				this._cache.length = Math.sqrt(this.x*this.x + this.y*this.y);
 			}
 			return this._cache.length;
 		}
