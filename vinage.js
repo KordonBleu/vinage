@@ -43,9 +43,8 @@ GeometricObject.proxyHandler = {
 }
 GeometricObject.prototype.circleObb = function(circleX, circleY, circleRadius, rectX, rectY, rectWidth, rectHeight, rectAngle) {//haha, rectAngle
 	var tCircleX = Math.cos(-rectAngle) * (circleX - rectX) - Math.sin(-rectAngle) * (circleY - rectY) + rectX,//rotate the circle around the center of the OOB
-		tCircleY = Math.sin(-rectAngle) * (circleX - rectX) + Math.cos(-rectAngle) * (circleY - rectY) + rectY;//so that the OBB can be treated as an AABB
-
-	var deltaX = Math.abs(tCircleX - rectX),
+		tCircleY = Math.sin(-rectAngle) * (circleX - rectX) + Math.cos(-rectAngle) * (circleY - rectY) + rectY,//so that the OBB can be treated as an AABB
+		deltaX = Math.abs(tCircleX - rectX),
 		deltaY = Math.abs(tCircleY - rectY);
 
 	if (deltaX > rectWidth/2 + circleRadius || deltaY > rectHeight/2 + circleRadius) return false;
@@ -168,10 +167,22 @@ Vector.prototype.apply = function(point) {
 }
 
 function Rectangle(centerPoint, width, height, angle) {
-	this.center = centerPoint;
-	this.center._proxyMap = Rectangle.centerProxyMap;//TODO: allow differents parents
-	this.center._parents.push(this);//to have differents maps applied to them
-	//this creates references to an object and might prevent it from being GC'd
+	function primeCenter(thisArg, center) {
+		thisArg._center = center;
+		thisArg._center._proxyMap = Rectangle.centerProxyMap;//TODO: apply a specific map depending on the parent type (Rectangle, Circle, etc.)
+		thisArg._center._parents.push(thisArg);
+	}
+	primeCenter(this, centerPoint);
+
+	Object.defineProperty(this, 'center', {
+		get: function() {
+			return this._center;
+		},
+		set: function(newCenter) {//when center is replaced, remove references to its parent
+			this.forget();
+			primeCenter(this, newCenter);
+		}
+	});
 
 	this.width = width;
 	this.height = height;
@@ -211,7 +222,7 @@ Object.defineProperties(Rectangle.prototype, {
 		},
 		enumerable: true
 	},
-	"AAVertices": {
+	"AAVertices": {//vertices as they would be if the rectangle wasn't rotated
 		get: function() {
 			if (!this._upToDate.AAVertices) {
 				this._upToDate.AAVertices = true;
@@ -262,7 +273,7 @@ Rectangle.prototype.collide = function(geomObjOne, geomObjTwo) {
 					return this.sat(geomObjOne.vertices, vertiTwo);
 				}
 		} else if (geomObjTwo instanceof Circle) {
-			return this.circleObb(0, 0, geomObjTwo.radius, isFinite(this.width) ? getDelta(geomObjTwo.center.x, geomObjOne.center.x, this.width) : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? getDelta(geomObjTwo.center.y,  geomObjOne.center.y, this.height) : geomObjTwo.center.y - geomObjOne.center.y, geomObjOne.width, geomObjOne.height, geomObjOne.angle);
+			return this.circleObb(0, 0, geomObjTwo.radius, isFinite(this.width) ? getDelta(geomObjTwo.center.x, geomObjOne.center.x, this.width) : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? getDelta(geomObjTwo.center.y, geomObjOne.center.y, this.height) : geomObjTwo.center.y - geomObjOne.center.y, geomObjOne.width, geomObjOne.height, geomObjOne.angle);
 		} else if (geomObjTwo instanceof Point) {
 			return this.pointObb(0, 0, isFinite(this.width) ? getDelta(geomObjTwo.x, geomObjOne.center.x, this.width) : geomObjTwo.x - geomObjOne.center.x, isFinite(this.height) ? getDelta(geomObjTwo.y, geomObjOne.center.y, this.height) : geomObjTwo.y - geomObjOne.center.y, geomObjOne.width, geomObjOne.height, geomObjOne.angle);
 		} else {
@@ -280,7 +291,7 @@ Rectangle.prototype.collide = function(geomObjOne, geomObjTwo) {
 		}
 	} else if (geomObjOne instanceof Point) {
 		if (geomObjTwo instanceof Circle) {
-			return this.pointCircle(0, 0, isFinite(this.width) ? getDelta(geomObjOne.x,  geomObjTwo.center.x, this.width) : geomObjOne.x - geomObjTwo.center.x, isFinite(this.height) ? getDelta(geomObjOne.y, geomObjTwo.center.y, this.height) : geomObjOne.y - geomObjTwo.center.y, geomObjTwo.radius);
+			return this.pointCircle(0, 0, isFinite(this.width) ? getDelta(geomObjOne.x, geomObjTwo.center.x, this.width) : geomObjOne.x - geomObjTwo.center.x, isFinite(this.height) ? getDelta(geomObjOne.y, geomObjTwo.center.y, this.height) : geomObjOne.y - geomObjTwo.center.y, geomObjTwo.radius);
 		} else if (geomObjTwo instanceof Rectangle) {
 			return this.pointObb(0, 0, isFinite(this.width) ? getDelta(geomObjOne.x, geomObjTwo.center.x, this.width) : geomObjOne.x - geomObjTwo.center.x, isFinite(this.height) ? getDelta(geomObjOne.y, geomObjTwo.center.y, this.height) : geomObjOne.y - geomObjTwo.center.y, geomObjTwo.width, geomObjTwo.height, geomObjTwo.angle);
 		} else if (geomObjTwo instanceof Point) {
@@ -291,6 +302,14 @@ Rectangle.prototype.collide = function(geomObjOne, geomObjTwo) {
 	} else {
 		throw new TypeError(errStr);
 	}
+}
+Rectangle.prototype.forget = function() {
+	this.center._parents.some(function(parent, index) {
+		if (parent._proxy === this) {
+			this.center._parents.splice(index, 1);
+			return true;
+		}
+	}, this);
 }
 
 function Circle(centerPoint, radius) {

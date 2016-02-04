@@ -58,6 +58,7 @@ var myRectangleOne = new Rectangle(myPoint, 45, 87, Math.PI/7),
 
 #### Methods
 * `project(vector)`: returns the projection of the rectangle against an axis
+* `forget()`: vinage may prevent rectangles from being garbage collected<sup>[1](#footnote1)</sup>. If you don't want to use a rectangle anymore, for example before using `delete` on it or replacing it with something else, **please use this method**. *Do not use an object this method has been used on.*
 
 
 ## Universes
@@ -91,7 +92,7 @@ myUniverse.collide(myRectangle, myCircle);//returns true or false
 
 ## How it works
 Vinage relies on the Proxy object (introduced in ES6) to cache data. Every instance of the above classes is actually a proxy to a regular object.
-When a modification is made to a writable propertie, the proxy object searches for read-only properties relying on it, and keep a reminder that the read-only propertie must be calculated again. The next time the read-only propertie will be retrieved, it will be recalculated and recached.
+When a modification is made to a writable property, the proxy object searches for read-only properties relying on it, and keep a reminder that they must be calculated again. The next time one of those read-only properties will be retrieved, it will be recalculated and recached.
 ```JavaScript
 var vec = new Vector(25, 87);//vec is actually a proxy
 console.log(vec.length);//vec.length is caclulated based on vec.x and vec.y, then stored, and finally returned.
@@ -110,6 +111,11 @@ Vector.prototype._proxyMap = {
 };
 ```
 
+
 ## Testing
 You can open `graphical-tester.svg` in your browser and move around elements to check if collisions work as intended.
 When the library reports a collision the colliding elements are red, otherwise they are green.
+
+
+## Footnotes
+<a id="footnote1">1</a>: This behavior happens when an object is child of multiple parents (for example a point used as the center of differents rectangles), because the child keeps a reference to each parent.

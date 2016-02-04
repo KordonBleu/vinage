@@ -115,7 +115,12 @@ dCircle.prototype.moveImage = function() {
 	this.image.setAttribute("transform", "translate(" + this.box.center.x + ", " + this.box.center.y + ")");
 }
 
-new dRect(new Point(400, 100), 50, 50*((1 + Math.sqrt(5))/2), 73245*Math.PI/6323);
+var a = new Point(400, 100),
+	b = new dRect(a, 50, 50*((1 + Math.sqrt(5))/2), 73245*Math.PI/6323);
+b.box.center = new Point(45, 87);
+b.moveImage();//resfresh position once center is replaced
+
+//b.box.forget();
 //new dRect(new Point(500, 150), 270, 200, 3*Math.PI/4);
 
 //new dCircle(new Point(400, 200), 30);
