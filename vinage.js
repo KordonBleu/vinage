@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 function GeometricObject() {
 	//To inherit from `GeometricObject`:
 	// * call `return GeometricObject.call(this);` at the end of any constructor
@@ -7,10 +7,9 @@ function GeometricObject() {
 	this._cache = {};
 	this._upToDate = {};
 	this._parents = [];
-	if (typeof Proxy !== "undefined") {
-		this._proxy = new Proxy(this, GeometricObject.proxyHandler);
-		return this._proxy;
-	}
+
+	this._proxy = new Proxy(this, GeometricObject.proxyHandler);
+	return this._proxy;
 }
 GeometricObject.proxyHandler = {
 	set: function(target, name, value, receiver) {
@@ -23,7 +22,7 @@ GeometricObject.proxyHandler = {
 
 		target[name] = value;
 
-		if (name === "_proxyMap") return true;
+		if (name === '_proxyMap') return true;
 		if (target.hasOwnProperty(name)) {
 			for(var key in target._proxyMap) {
 				if (key === name) {
@@ -121,7 +120,7 @@ function Point(x, y) {
 Point.prototype = Object.create(GeometricObject.prototype);
 
 function Vector(argOne, argTwo) {
-	if (typeof argOne === "number" && typeof argTwo === "number") {//they are coordinates
+	if (typeof argOne === 'number' && typeof argTwo === 'number') {//they are coordinates
 		this.x = argOne;
 		this.y = argTwo;
 	} else if (argOne instanceof Point && argTwo instanceof Point) {
@@ -131,11 +130,11 @@ function Vector(argOne, argTwo) {
 	return GeometricObject.call(this);
 }
 Vector.prototype._proxyMap = {
-	x: ["orthogonalVector", "length"],
-	y: ["orthogonalVector", "length"]
+	x: ['orthogonalVector', 'length'],
+	y: ['orthogonalVector', 'length']
 };
 Object.defineProperties(Vector.prototype, {
-	"orthogonalVector": {
+	'orthogonalVector': {
 		get: function() {
 			if (!this._upToDate.orthogonalVector) {
 				this._upToDate.orthogonalVector = true;
@@ -144,7 +143,7 @@ Object.defineProperties(Vector.prototype, {
 			return this._cache.orthogonalVector;
 		}
 	},
-	"length": {
+	'length': {
 		get: function() {
 			if (!this._upToDate.length) {
 				this._upToDate.length = true;
@@ -193,16 +192,16 @@ function Rectangle(centerPoint, width, height, angle) {
 }
 Rectangle.prototype = Object.create(GeometricObject.prototype);
 Rectangle.prototype._proxyMap = {
-	width: ["vertices", "AAVertices"],
-	height: ["vertices", "AAVertices"],
-	angle: ["vertices"]
+	width: ['vertices', 'AAVertices'],
+	height: ['vertices', 'AAVertices'],
+	angle: ['vertices']
 };
 Rectangle.centerProxyMap = {
-	x: ["vertices", "AAVertices"],
-	y: ["vertices", "AAVertices"]
+	x: ['vertices', 'AAVertices'],
+	y: ['vertices', 'AAVertices']
 };
 Object.defineProperties(Rectangle.prototype, {
-	"vertices": {
+	'vertices': {
 		get: function() {
 			if (!this._upToDate.vertices) {
 				this._upToDate.vertices = true;
@@ -222,7 +221,7 @@ Object.defineProperties(Rectangle.prototype, {
 		},
 		enumerable: true
 	},
-	"AAVertices": {//vertices as they would be if the rectangle wasn't rotated
+	'AAVertices': {//vertices as they would be if the rectangle wasn't rotated
 		get: function() {
 			if (!this._upToDate.AAVertices) {
 				this._upToDate.AAVertices = true;
@@ -250,7 +249,7 @@ Rectangle.prototype.collide = function(geomObjOne, geomObjTwo) {
 
 		return delta;//shortest possible delta
 	}
-	var errStr = "Not a valid geometric object";
+	var errStr = 'Not a valid geometric object';
 	if (geomObjOne instanceof Rectangle) {
 		if (geomObjTwo instanceof Rectangle) {
 			if (geomObjOne.angle === geomObjTwo.angle) {
@@ -319,7 +318,7 @@ function Circle(centerPoint, radius) {
 Circle.prototype = Object.create(GeometricObject.prototype);
 
 
-if (typeof module !== "undefined" && typeof module.exports !== "undefined") module.exports = {
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') module.exports = {
 	Point: Point,
 	Vector: Vector,
 	Rectangle: Rectangle,

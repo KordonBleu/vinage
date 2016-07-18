@@ -1,10 +1,21 @@
 # Vinage
 
 Vinage is a collision library usable in both the browser and Node.js. It supports wrap-around.
+Your JavaScript implementation needs to [support `Proxy`](https://kangax.github.io/compat-table/es6/#test-Proxy) for it to work. Current Firefox, Chrome and Node.js v6+ work.
+
+```sh
+$ npm install vinage --save
+```
+
+```JavaScript
+var vinage = require("vinage");
+
+var whatsThePoint = new vinage.Point(0, 0);
+```
 
 ## Geometric objects
 To use it, you must define instances of the classes listed below, which represent geometric objects in a 2D space.
-You can modify some properties, as indicated. Other properties are calculated when you read them, then cached. When accessed again, they are either retrieved or recalculated, depending on the modifications made to the object.
+You can modify some properties, as indicated. Other properties are calculated when you read them, then cached. When accessed again, they are either retrieved or recalculated, depending on the modifications you made to other properties of the object.
 
 ### Point(x, y)
 ```JavaScript
@@ -64,7 +75,7 @@ var myRectangleOne = new Rectangle(myPoint, 45, 87, Math.PI/7),
 ## Universes
 If you want to check for collision, you must first define a **universe** where collisions happen. Universes are mere instances of Rectangle.
 
-Most of the time you will want them to happen in an Cartesian plane, ie an infinite universe. You can create it like this:
+Most of the time you will want them to happen in an Cartesian plane (i.e. an infinite universe). You can create it like this:
 ```JavaScript
 var myUniverse = new Rectangle(new Point(0, 0), Infinity, Infinity);
 ```
@@ -106,8 +117,8 @@ Every instance has a `_cache` property, an object (used as a map) where calculat
 Every instance has a `_proxyMap` property, inherited from its prototype, an object (used as a map) which contains for each modifiable variable, the list of the calculated variable which will have to be refreshed.
 ```JavaScript
 Vector.prototype._proxyMap = {
-	x: ["orthogonalVector", "length"],//if myVec.x is modified, myVec._upToDate.orthogonalVector and myVec._upToDate.length will both be set to false
-	y: ["orthogonalVector", "length"]//if myVec.y is modified, myVec._upToDate.orthogonalVector and myVec._upToDate.length will both be set to false
+	x: ['orthogonalVector', 'length'],//if myVec.x is modified, myVec._upToDate.orthogonalVector and myVec._upToDate.length will both be set to false
+	y: ['orthogonalVector', 'length']//if myVec.y is modified, myVec._upToDate.orthogonalVector and myVec._upToDate.length will both be set to false
 };
 ```
 

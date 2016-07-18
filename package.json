@@ -1,0 +1,23 @@
+{
+  "bugs": {
+    "url": "https://github.com/KordonBleu/vinage/issues"
+  },
+  "description": "Collision library with a cache for efficiency, and support for wrap-around",
+  "homepage": "https://github.com/KordonBleu/vinage",
+  "keywords": [
+    "collision",
+    "collision detection",
+    "wrap-around",
+    "wraparound",
+    "wrap around",
+    "2D"
+  ],
+  "license": "MPL-2.0",
+  "main": "vinage.js",
+  "name": "vinage",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KordonBleu/vinage.git"
+  },
+  "version": "0.1.1"
+}
