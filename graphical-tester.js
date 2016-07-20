@@ -1,12 +1,9 @@
 'use strict';
 document.rootElement.setAttribute('viewBox', '0 0 ' + window.innerWidth + ' ' + window.innerHeight);
 var mainUniverse = document.getElementById('mainUniverse'),
-	universe = new Rectangle(new Point(0, 0), mainUniverse.getAttribute('width') === '100%' ? Infinity : parseInt(mainUniverse.getAttribute('width'), 10), mainUniverse.getAttribute('height') === '100%' ? Infinity : parseInt(mainUniverse.getAttribute('height'), 10)),
+	universe = new vinage.Rectangle(new vinage.Point(0, 0), mainUniverse.getAttribute('width') === '100%' ? Infinity : parseInt(mainUniverse.getAttribute('width'), 10), mainUniverse.getAttribute('height') === '100%' ? Infinity : parseInt(mainUniverse.getAttribute('height'), 10)),
 	xmlns = 'http://www.w3.org/2000/svg';
 
-function degToRad(deg) {
-	return deg * (Math.PI/180);
-}
 function radToDeg(rad) {
 	return rad * (180/Math.PI);
 }
@@ -19,8 +16,8 @@ function collide(objOne, objTwo) {
 }
 
 var dObjs = [],
-	 objBeingMoved = null,
-	 deltaCenter = null;
+	objBeingMoved = null,
+	deltaCenter = null;
 
 function drag(e) {
 	objBeingMoved.box.center.x = e.clientX + deltaCenter.x;
@@ -33,11 +30,11 @@ function drag(e) {
 }
 
 document.rootElement.addEventListener('mousedown', function(e) {
-	var pointer = new Point(e.clientX, e.clientY);
+	var pointer = new vinage.Point(e.clientX, e.clientY);
 	dObjs.forEach(function(obj) {//replace with .some()?
 		if (collide(pointer, obj.box)) {
 			objBeingMoved = obj;
-			deltaCenter = new Vector(pointer, obj.box.center);
+			deltaCenter = new vinage.Vector(pointer, obj.box.center);
 
 			document.addEventListener('mousemove', drag);
 		}
@@ -84,7 +81,7 @@ dObj.prototype.checkColl = function(thisObj) {
 
 
 function dRect(point, width, height, angle) {
-	this.box = new Rectangle(point, width, height, angle);
+	this.box = new vinage.Rectangle(point, width, height, angle);
 
 	this.image = document.createElementNS(xmlns, 'g');
 
@@ -98,10 +95,10 @@ function dRect(point, width, height, angle) {
 }
 dRect.prototype.moveImage = function() {
 	this.image.setAttribute('transform', 'translate(' + (this.box.center.x - this.box.width/2) + ', ' + (this.box.center.y - this.box.height/2) + ')');
-}
+};
 
-function dCircle(point, radius) {
-	this.box = new Circle(point, radius);
+function dCirc(point, radius) {
+	this.box = new vinage.Circle(point, radius);
 
 	this.image = document.createElementNS(xmlns, 'g');
 
@@ -111,17 +108,17 @@ function dCircle(point, radius) {
 
 	return dObj.call(this);
 }
-dCircle.prototype.moveImage = function() {
+dCirc.prototype.moveImage = function() {
 	this.image.setAttribute('transform', 'translate(' + this.box.center.x + ', ' + this.box.center.y + ')');
-}
+};
 
-var a = new Point(400, 100),
+var a = new vinage.Point(400, 100),
 	b = new dRect(a, 50, 50*((1 + Math.sqrt(5))/2), 73245*Math.PI/6323);
-b.box.center = new Point(45, 87);
+b.box.center = new vinage.Point(45, 87);
 b.moveImage();//resfresh position once center is replaced
 
 //b.box.forget();
-//new dRect(new Point(500, 150), 270, 200, 3*Math.PI/4);
+//new dRect(new vinage.Point(500, 150), 270, 200, 3*Math.PI/4);
 
-//new dCircle(new Point(400, 200), 30);
-new dCircle(new Point(400, 400), 100);
+//new dCirc(new vinage.Point(400, 200), 30);
+new dCirc(new vinage.Point(400, 400), 100);
