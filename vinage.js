@@ -1,9 +1,11 @@
 'use strict';
+
 function GeometricObject() {
 	//To inherit from `GeometricObject`:
 	// * call `return GeometricObject.call(this);` at the end of any constructor
-	// * create a new prototype for your object, whose prototype is `GeometricObject.prototype`. Example: `YourConstructor.prototype = Object.create(GeometricObject.prototype);`.
-	// * add a `_proxyMap` property to your object (directly or to its prototype).
+	// * create a new prototype for your class, whose prototype is `GeometricObject.prototype`. Example: `YourConstructor.prototype = Object.create(GeometricObject.prototype);`
+	// * set the constructor of the prototype of your class to the class itself. Example: `YourConstructor.prototype.constructor = YourConstructor;`
+	// * optionaly add a `_proxyMap` and/or a `_parentProxyMap` property to your object (directly or to its prototype).
 	this._cache = {};
 	this._upToDate = {};
 	this._parents = [];
@@ -22,18 +24,26 @@ GeometricObject.proxyHandler = {
 
 		target[name] = value;
 
-		if (name === '_proxyMap') return true;
 		if (target.hasOwnProperty(name)) {
-			for(var key in target._proxyMap) {
-				if (key === name) {
-					target._proxyMap[key].forEach(function(key) {
-						if (target._parents.length === 0) target._upToDate[key] = false;
-						else target._parents.forEach(function(parent) {
-							parent._upToDate[key] = false;
+			if (target._proxyMap !== undefined) { // unvalidate self's properties
+				for (var key in target._proxyMap) {
+					if (key === name) {
+						target._proxyMap[key].forEach(function(sKey) {
+							target._upToDate[sKey] = false;
 						});
-					});
-					return true;
+					}
 				}
+			}
+			if (target._parentProxyMap !== undefined) { // unvalidate parent's properties
+				target._parents.forEach(function(parent) {
+					if (target._parentProxyMap[parent.constructor.name] !== undefined) {
+						for (var key in target._parentProxyMap[parent.constructor.name]) {
+							target._parentProxyMap[parent.constructor.name][key].forEach(function(pKey) {
+								parent._upToDate[pKey] = false;
+							});
+						}
+					}
+				});
 			}
 			return true;
 		}
@@ -118,6 +128,13 @@ function Point(x, y) {
 	return GeometricObject.call(this);
 }
 Point.prototype = Object.create(GeometricObject.prototype);
+Point.prototype.constructor = Point;
+Point.prototype._parentProxyMap = {
+	'Rectangle': {
+		x: ['vertices', 'AAVertices'],
+		y: ['vertices', 'AAVertices']
+	}
+};
 
 function Vector(argOne, argTwo) {
 	if (typeof argOne === 'number' && typeof argTwo === 'number') {//they are coordinates
@@ -129,6 +146,7 @@ function Vector(argOne, argTwo) {
 	}
 	return GeometricObject.call(this);
 }
+//Vector.prototype.constructor = Vector;
 Vector.prototype._proxyMap = {
 	x: ['orthogonalVector', 'length'],
 	y: ['orthogonalVector', 'length']
@@ -168,7 +186,6 @@ Vector.prototype.apply = function(point) {
 function Rectangle(centerPoint, width, height, angle) {
 	function primeCenter(thisArg, center) {
 		thisArg._center = center;
-		thisArg._center._proxyMap = Rectangle.centerProxyMap;//TODO: apply a specific map depending on the parent type (Rectangle, Circle, etc.)
 		thisArg._center._parents.push(thisArg);
 	}
 	primeCenter(this, centerPoint);
@@ -191,14 +208,11 @@ function Rectangle(centerPoint, width, height, angle) {
 	return GeometricObject.call(this);
 }
 Rectangle.prototype = Object.create(GeometricObject.prototype);
+Rectangle.prototype.constructor = Rectangle;
 Rectangle.prototype._proxyMap = {
 	width: ['vertices', 'AAVertices'],
 	height: ['vertices', 'AAVertices'],
 	angle: ['vertices']
-};
-Rectangle.centerProxyMap = {
-	x: ['vertices', 'AAVertices'],
-	y: ['vertices', 'AAVertices']
 };
 Object.defineProperties(Rectangle.prototype, {
 	'vertices': {
@@ -316,6 +330,7 @@ function Circle(centerPoint, radius) {
 	this.radius = radius;
 }
 Circle.prototype = Object.create(GeometricObject.prototype);
+Circle.prototype.constructor = Circle;
 
 
 if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') module.exports = {
