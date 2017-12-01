@@ -96,12 +96,6 @@ var vinage = (function(){
 			return overlap(projOne, projTwo);
 		});
 	};
-	GeometricObject.prototype.aabbAabb = function(rectOneX, rectOneY, rectOneWidth, rectOneHeight, rectTwoX, rectTwoY, rectTwoWidth, rectTwoHeight) {
-		return ! (rectTwoX - rectTwoWidth/2 >= rectOneX + rectOneWidth/2
-		|| rectTwoX + rectTwoWidth/2 <= rectOneX - rectOneWidth/2
-		|| rectTwoY - rectTwoHeight/2 >= rectOneY + rectOneHeight/2
-		|| rectTwoY + rectTwoHeight/2 <= rectOneY - rectOneHeight/2);
-	};
 	GeometricObject.prototype.circleCircle = function(circleOneX, circleOneY, circleOneRadius, circleTwoX, circleTwoY, circleTwoRadius) {
 		var deltaX = circleOneX - circleTwoX,
 			deltaY = circleOneY - circleTwoY,
