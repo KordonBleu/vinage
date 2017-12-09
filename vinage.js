@@ -263,10 +263,13 @@ var vinage = (function(){
 		if (geomObjOne instanceof Rectangle) {
 			if (geomObjTwo instanceof Rectangle) {
 				if (geomObjOne.angle === geomObjTwo.angle) {
-					return (mod(geomObjTwo.center.x + geomObjTwo.width/2 - geomObjOne.center.x + geomObjOne.width/2, this.width) >= 0
-						&& mod(geomObjTwo.center.x - geomObjTwo.width/2 - geomObjOne.center.x + geomObjOne.width/2, this.width) <= geomObjOne.width
-						&& mod(geomObjTwo.center.y + geomObjTwo.height/2 - geomObjOne.center.y + geomObjOne.height/2, this.height) >= 0
-						&& mod(geomObjTwo.center.y - geomObjTwo.height/2 - geomObjOne.center.y + geomObjOne.height/2, this.height) <= geomObjOne.height);
+					return (
+						mod(geomObjOne.center.x - geomObjOne.width/2, this.width) <= mod(geomObjTwo.center.x + geomObjTwo.width/2, this.width)
+						|| mod(geomObjOne.center.x + geomObjOne.width/2, this.width) >= mod(geomObjTwo.center.x - geomObjTwo.width/2, this.width)
+					) && (
+						mod(geomObjOne.center.y - geomObjOne.height/2, this.height) <= mod(geomObjTwo.center.y + geomObjTwo.height/2, this.height)
+						|| mod(geomObjOne.center.y + geomObjOne.height/2, this.height) >= mod(geomObjTwo.center.y - geomObjTwo.height/2, this.height)
+					);
 				} else {
 					var vertiTwo = makePseudoClones(geomObjTwo.vertices);
 					if (isFinite(this.width)) {
