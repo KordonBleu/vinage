@@ -249,9 +249,8 @@ var vinage = (function(){
 			return pseudoClone;
 		}
 		function mod(dividend, divisor) {
-			if (!isFinite(divisor)) return divdend;
-			while (dividend < 0 || dividend >= divisor) dividend = (dividend + divisor) % divisor;
-			return dividend;
+			if (!isFinite(divisor)) return dividend;
+			return (dividend % divisor + divisor) % divisor;
 		}
 		function getDelta(coordOne, coordTwo, wrapLgt) {
 			var delta = mod(coordOne, wrapLgt) - mod(coordTwo, wrapLgt);
@@ -264,15 +263,10 @@ var vinage = (function(){
 		if (geomObjOne instanceof Rectangle) {
 			if (geomObjTwo instanceof Rectangle) {
 				if (geomObjOne.angle === geomObjTwo.angle) {
-					/*if (debug) {
-						console.log('collisions: world(' + this.width + ', ' + this.height + ') obj1(' + geomObjOne.center.x + ', ' + geomObjOne.center.y + ', ' + geomObjOne.width + ', ' + geomObjOne.height + ') obj2(' + geomObjTwo.center.x + ', ' + geomObjTwo.center.y + ', ' + geomObjTwo.width + ', ' + geomObjTwo.height + ')');
-					}*/
-
 					return (mod(geomObjTwo.center.x + geomObjTwo.width/2 - geomObjOne.center.x + geomObjOne.width/2, this.width) >= 0
 						&& mod(geomObjTwo.center.x - geomObjTwo.width/2 - geomObjOne.center.x + geomObjOne.width/2, this.width) <= geomObjOne.width
 						&& mod(geomObjTwo.center.y + geomObjTwo.height/2 - geomObjOne.center.y + geomObjOne.height/2, this.height) >= 0
 						&& mod(geomObjTwo.center.y - geomObjTwo.height/2 - geomObjOne.center.y + geomObjOne.height/2, this.height) <= geomObjOne.height);
-
 				} else {
 					var vertiTwo = makePseudoClones(geomObjTwo.vertices);
 					if (isFinite(this.width)) {
