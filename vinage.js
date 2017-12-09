@@ -102,12 +102,6 @@ var vinage = (function(){
 			deltaRadius = circleOneRadius + circleTwoRadius; // store the result
 		return deltaX*deltaX + deltaY*deltaY < deltaRadius*deltaRadius;
 	};
-	GeometricObject.prototype.aabbAabb = function(rectOneX, rectOneY, rectOneWidth, rectOneHeight, rectTwoX, rectTwoY, rectTwoWidth, rectTwoHeight) {
-		return ! (rectTwoX - rectTwoWidth/2 >= rectOneX + rectOneWidth/2
-		|| rectTwoX + rectTwoWidth/2 <= rectOneX - rectOneWidth/2
-		|| rectTwoY - rectTwoHeight/2 >= rectOneY + rectOneHeight/2
-		|| rectTwoY + rectTwoHeight/2 <= rectOneY - rectOneHeight/2);
-	};
 	GeometricObject.prototype.pointCircle = function(pointX, pointY, circleX, circleY, radius) {
 		var deltaX = circleX - pointX,
 			deltaY = circleY - pointY; // store the result
@@ -246,7 +240,7 @@ var vinage = (function(){
 			}
 		}
 	});
-	Rectangle.prototype.collide = function(geomObjOne, geomObjTwo) {
+	Rectangle.prototype.collide = function(geomObjOne, geomObjTwo, debug) {
 		function makePseudoClones(vertices) {
 			var pseudoClone = [];
 			vertices.forEach(function(vertex) {
@@ -255,7 +249,8 @@ var vinage = (function(){
 			return pseudoClone;
 		}
 		function mod(dividend, divisor) {
-			return (dividend%divisor + divisor) % divisor;
+			if (!isFinite(divisor)) return dividend;
+			return (dividend % divisor + divisor) % divisor;
 		}
 		function getDelta(coordOne, coordTwo, wrapLgt) {
 			var delta = mod(coordOne, wrapLgt) - mod(coordTwo, wrapLgt);
@@ -268,7 +263,10 @@ var vinage = (function(){
 		if (geomObjOne instanceof Rectangle) {
 			if (geomObjTwo instanceof Rectangle) {
 				if (geomObjOne.angle === geomObjTwo.angle) {
-					return this.aabbAabb(0, 0, geomObjOne.width, geomObjOne.height, isFinite(this.width) ? (geomObjTwo.center.x - geomObjOne.center.x + this.width)%this.width : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? (geomObjTwo.center.y - geomObjOne.center.y + this.height)%this.height : geomObjTwo.center.y - geomObjOne.center.y, geomObjTwo.width, geomObjTwo.height);
+					return (mod(geomObjTwo.center.x + geomObjTwo.width/2 - geomObjOne.center.x + geomObjOne.width/2, this.width) >= 0
+						&& mod(geomObjTwo.center.x - geomObjTwo.width/2 - geomObjOne.center.x + geomObjOne.width/2, this.width) <= geomObjOne.width
+						&& mod(geomObjTwo.center.y + geomObjTwo.height/2 - geomObjOne.center.y + geomObjOne.height/2, this.height) >= 0
+						&& mod(geomObjTwo.center.y - geomObjTwo.height/2 - geomObjOne.center.y + geomObjOne.height/2, this.height) <= geomObjOne.height);
 				} else {
 					var vertiTwo = makePseudoClones(geomObjTwo.vertices);
 					if (isFinite(this.width)) {
@@ -295,6 +293,7 @@ var vinage = (function(){
 			}
 		} else if (geomObjOne instanceof Circle) {
 			if (geomObjTwo instanceof Rectangle) {
+			
 				return this.circleObb(0, 0, geomObjOne.radius, isFinite(this.width) ? getDelta(geomObjOne.center.x, geomObjTwo.center.x, this.width) : geomObjOne.center.x - geomObjTwo.center.x, isFinite(this.height) ? getDelta(geomObjOne.center.y, geomObjTwo.center.y, this.height) : geomObjOne.center.y - geomObjTwo.center.y, geomObjTwo.width, geomObjTwo.height, geomObjTwo.angle);
 			} else if (geomObjTwo instanceof Circle) {
 				return this.circleCircle(0, 0, geomObjOne.radius, isFinite(this.width) ? getDelta(geomObjTwo.center.x, geomObjOne.center.x, this.width) : geomObjTwo.center.x - geomObjOne.center.x, isFinite(this.height) ? getDelta(geomObjTwo.center.y, geomObjOne.center.y, this.height) : geomObjTwo.center.y - geomObjOne.center.y, geomObjTwo.radius);
